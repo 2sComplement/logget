@@ -1,23 +1,65 @@
 # Log Get
 
-Get all the logs.
+Gets all the logs.
 
 ## Execution
 
-### Install dependencise
+### Install dependencies
 ```
 yarn
 ```
-### Run dev mode
+
+### Build
+
+```
+yarn build
+```
+
+### Run dev environment
 ```
 yarn dev
 ```
 
-## Approach
+### Run docker environment
 todo
 
-## Dependencies
-todo
+## Runtime Requirements
+
+* Node v16.15.1
+* Yarn
+* Docker (optional)
+
+## Usage
+
+### List contents
+List the contents of the log root or nested folders:
+```sh
+# Root log folder
+curl localhost:3100/logs
+
+# Nested folders
+curl localhost:3100/logs/dir1/dir2
+```
+
+### Get/filter logs
+Get a log file with optional filtering:
+```sh
+# Get the whole file
+curl localhost:3100/logs/log1.log
+
+# Filter the response using the `search` query parameter
+curl localhost:3100/logs/log1.log?search=debug
+
+# Specify the last n number of matching entries
+curl "localhost:3100/logs/log1.log?search=debug&last=5"
+
+# Specify the last n number of log entries (without a search parameter)
+curl "localhost:3100/logs/log1.log?last=5"
+```
+
+## Third Party JS Libraries
+* dotenv
+* express
 
 ## Acceptance Criteria
 

@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
-import fs from "fs";
+import fs, { WriteStream } from "fs";
 import path from "path";
 import { Dir, DirectoryContents } from "../models/DirectoryContents";
+import { Transform } from "stream";
+import { FilteredStream } from "../dal/FilteredStream";
 
 export const getLogFiles = (req: Request, res: Response, root: string) => {
     if (!fs.existsSync(root)) {
@@ -59,11 +61,22 @@ export const getLogFile = (
         } else {
             res.writeHead(200, {
                 "Content-Type": "application/octet-stream",
-                "Content-Disposition": `attachment; ${fileName}`,
-                "Content-Length": stats.size,
+                // "Content-Disposition": `attachment; ${fileName}`,
+                // "Content-Length": stats.size,
             });
-            const rs = fs.createReadStream(fullPath);
-            rs.pipe(res);
+
+            const search = req.query.search as string;
+            // const tail = req.query.tail;
+
+            const readStream = fs.createReadStream(fullPath);
+
+            if (search) {
+                const filter = (chunk: any) => chunk.toString().search(search) >= 0
+                const filteredStream = new FilteredStream(filter);
+                readStream.pipe(filteredStream).pipe(res);
+            } else {
+                readStream.pipe(res);
+            }
         }
     }
 };

@@ -5,12 +5,12 @@ import { Dir, DirectoryContents } from "../models/DirectoryContents";
 import { FilteredStream } from "../dal/FilteredStream";
 import { TailStream } from "../dal/TailStream";
 
-export const getLogFiles = (req: Request, res: Response, root: string) => {
-    if (!fs.existsSync(root)) {
+export const getLogFiles = (req: Request, res: Response, dir: string) => {
+    if (!fs.existsSync(dir)) {
         res.statusCode = 400;
-        res.send(`Invalid path '${root}'`);
+        res.send(`Invalid path '${dir}'`);
     } else {
-        const dirents: fs.Dirent[] = fs.readdirSync(root, {
+        const dirents: fs.Dirent[] = fs.readdirSync(dir, {
             withFileTypes: true,
         });
         const files = [];
@@ -23,7 +23,7 @@ export const getLogFiles = (req: Request, res: Response, root: string) => {
                 };
                 dirs.push(dir);
             } else {
-                const fullPath = path.join(root, dirent.name);
+                const fullPath = path.join(dir, dirent.name);
                 const stats = fs.statSync(fullPath);
                 const file = {
                     name: dirent.name,
@@ -33,7 +33,7 @@ export const getLogFiles = (req: Request, res: Response, root: string) => {
             }
         }
         const dirContents: DirectoryContents = {
-            path: root,
+            path: dir,
             files: files,
             dirs: dirs,
         };

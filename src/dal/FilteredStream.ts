@@ -5,20 +5,20 @@ const newline = process.platform === "win32" ? "\r\n" : "\n";
 export class FilteredStream extends Transform {
     private filter: (chunk: string) => boolean;
 
-    constructor(filter: (chunk: any) => boolean) {
+    constructor(filter: (chunk: string) => boolean) {
         super();
         this.filter = filter;
     }
 
     _transform(
-        chunk: any,
+        chunk: Buffer | string,
         encoding: BufferEncoding,
         callback: TransformCallback
     ) {
         const lines: string[] = chunk.toString().split(newline);
         const result: string[] = [];
 
-        for (var i = 0; i < lines.length; i++) {
+        for (let i = 0; i < lines.length; i++) {
             if (this.filter(lines[i])) {
                 result.push(lines[i]);
             }

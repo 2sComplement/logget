@@ -15,7 +15,7 @@ export const getLogFiles = (req: Request, res: Response, root: string) => {
         });
         const files = [];
         const dirs = [];
-        for (var i = 0; i < dirents.length; i++) {
+        for (let i = 0; i < dirents.length; i++) {
             const dirent = dirents[i];
             if (dirent.isDirectory()) {
                 const dir: Dir = {
@@ -77,16 +77,13 @@ export const getLogFile = (
             const readStream = fs.createReadStream(fullPath);
 
             if (search) {
-                const filter = (chunk: any) =>
+                const filter = (chunk: string) =>
                     chunk.toString().search(search) >= 0;
                 const filteredStream = new FilteredStream(filter);
 
                 if (intLast) {
                     const tailStream = new TailStream(intLast);
-                    readStream
-                        .pipe(filteredStream)
-                        .pipe(tailStream)
-                        .pipe(res);
+                    readStream.pipe(filteredStream).pipe(tailStream).pipe(res);
                 } else {
                     readStream.pipe(filteredStream).pipe(res);
                 }

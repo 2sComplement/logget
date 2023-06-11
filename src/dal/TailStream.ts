@@ -14,7 +14,7 @@ export class TailStream extends Transform {
     }
 
     _transform(
-        chunk: any,
+        chunk: Buffer | string,
         encoding: BufferEncoding,
         callback: TransformCallback
     ) {

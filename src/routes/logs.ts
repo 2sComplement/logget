@@ -97,3 +97,23 @@ export const getLogFile = (
         }
     }
 };
+
+export const getFromPath = (
+    req: Request,
+    res: Response,
+    root: string,
+    logPath: string
+) => {
+    const fullPath = path.join(root, logPath);
+    if (!fs.existsSync(fullPath)) {
+        res.statusCode = 400;
+        res.send(`Invalid path '${fullPath}'`);
+    } else {
+        const stats = fs.statSync(fullPath);
+        if (stats.isDirectory()) {
+            getLogFiles(req, res, fullPath);
+        } else {
+            getLogFile(req, res, root, logPath);
+        }
+    }
+};

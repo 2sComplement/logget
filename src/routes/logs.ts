@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import fs, { WriteStream } from "fs";
+import fs from "fs";
 import path from "path";
 import { Dir, DirectoryContents } from "../models/DirectoryContents";
-import { Transform } from "stream";
 import { FilteredStream } from "../dal/FilteredStream";
+import { TailStream } from "../dal/TailStream";
 
 export const getLogFiles = (req: Request, res: Response, root: string) => {
     if (!fs.existsSync(root)) {
@@ -59,21 +59,41 @@ export const getLogFile = (
             res.statusCode = 400;
             res.send(`Path must point to a file: '${fullPath}`);
         } else {
+            const search = req.query.search as string;
+            const last = req.query.last as string;
+            const intLast = parseInt(last);
+            if (last && !intLast) {
+                res.statusCode = 400;
+                res.send(`Query param 'last' must be a number`);
+                return;
+            }
+
             res.writeHead(200, {
                 "Content-Type": "application/octet-stream",
                 // "Content-Disposition": `attachment; ${fileName}`,
                 // "Content-Length": stats.size,
             });
 
-            const search = req.query.search as string;
-            // const tail = req.query.tail;
-
             const readStream = fs.createReadStream(fullPath);
 
             if (search) {
-                const filter = (chunk: any) => chunk.toString().search(search) >= 0
+                const filter = (chunk: any) =>
+                    chunk.toString().search(search) >= 0;
                 const filteredStream = new FilteredStream(filter);
-                readStream.pipe(filteredStream).pipe(res);
+
+                if (intLast) {
+                    const tailStream = new TailStream(intLast);
+                    readStream
+                        .pipe(filteredStream)
+                        .pipe(tailStream)
+                        .pipe(res);
+                } else {
+                    readStream.pipe(filteredStream).pipe(res);
+                }
+            } else if (intLast) {
+                // Not technically a requirement but it might be useful to return the last n lines of the log file
+                const tailStream = new TailStream(intLast);
+                readStream.pipe(tailStream).pipe(res);
             } else {
                 readStream.pipe(res);
             }

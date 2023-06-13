@@ -21,7 +21,18 @@ yarn dev
 ```
 
 ### Run docker environment
-todo
+To run the code in docker, first build the docker image:
+```
+docker build -t logget:0.1 .
+```
+Then run a container using this image:
+```
+docker run -p 3101:3100 -d logget:0.1
+```
+Then hit the app from the host machine on port `3101`:
+```
+curl localhost:3101/logs
+```
 
 ## Runtime Requirements
 

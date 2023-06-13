@@ -4,6 +4,8 @@ Gets all the logs.
 
 ## Execution
 
+Do these things to run the app.
+
 ### Install dependencies
 ```
 yarn
@@ -15,9 +17,19 @@ yarn
 yarn build
 ```
 
-### Run dev environment
+### Run
+```
+yarn start
+```
+
+### Run dev environment with watch
 ```
 yarn dev
+```
+
+### Run the tests
+```
+yarn test
 ```
 
 ### Run docker environment
@@ -40,7 +52,7 @@ curl localhost:3101/logs
 * Yarn
 * Docker (optional)
 
-## Usage
+## API Usage
 
 ### List contents
 List the contents of the log root or nested folders:

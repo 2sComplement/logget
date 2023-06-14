@@ -1,0 +1,1 @@
+export const newline = process.platform === "win32" ? "\r\n" : "\n";

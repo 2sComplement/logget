@@ -1,8 +1,8 @@
 import { expect, assert } from "chai";
+import { newline } from "../src/utils";
 import fs from "fs";
-import { FilteredStream } from "../src/dal/FilteredStream";
+import FilteredStream from "../src/streams/FilteredStream";
 
-const newline = process.platform === "win32" ? "\r\n" : "\n";
 
 describe("FilteredStream tests", () => {
     it("Filters based on text search", (done) => {

@@ -1,22 +1,25 @@
 import { Readable } from "stream";
+import { newline } from "../utils";
 import fs from "fs";
-// import StringDecoder from 'string_decoder'
-
-const newline = process.platform === "win32" ? "\r\n" : "\n";
 
 export default class ReverseReadStream extends Readable {
     private chunkSize = 1024 * 64;
+    private tail: number | null = null;
     private filePath: string;
     private position: number | null;
 
-    constructor(filePath: string) {
+    constructor(filePath: string, tail?: number) {
         super();
         this.filePath = filePath;
         this.position = null;
+        if (tail) {
+            this.tail = tail;
+        }
     }
 
     _readChunk() {
-        if (this.position !== null && this.position > 0) {
+        const isTailValid = this.tail === null || (this.tail !== null && this.tail > 0);
+        if (this.position !== null && this.position > 0 && isTailValid) {
             const pos = this.position;
             const chunkSize = Math.min(this.chunkSize, this.position);
             const buffer = Buffer.alloc(chunkSize);
@@ -24,6 +27,7 @@ export default class ReverseReadStream extends Readable {
                 if (err) {
                     this.emit("error", err);
                 } else {
+                    console.log(`fs.read(fd, buffer, 0, ${chunkSize}, ${pos - chunkSize})`)
                     fs.read(fd, buffer, 0, chunkSize, pos - chunkSize, (err, bytesRead) => {
                         if (err) {
                             this.emit("error", err);
@@ -38,6 +42,9 @@ export default class ReverseReadStream extends Readable {
                                     this.push(lines[0]);
                                     this.position -= lines[0].length;
                                     this.position -= newline.length;
+                                    if (this.tail !== null) {
+                                        this.tail -= 1;
+                                    }
                                 } else {
 
                                     //TODO make this more efficient
@@ -46,18 +53,22 @@ export default class ReverseReadStream extends Readable {
                                         revLines.push(lines[i]);
                                         this.position -= lines[i].length;
                                         this.position -= newline.length;
+                                        if (this.tail !== null) {
+                                            this.tail -= 1;
+                                        }
                                     }
                                     this.push(revLines.join(newline));
                                 }
                             }
                         }
+                    
+                        fs.close(fd, (err) => {
+                            if (err) {
+                                this.emit("err", err);
+                            }
+                        });
                     });
                 }
-                fs.close(fd, (err) => {
-                    if (err) {
-                        this.emit("err", err);
-                    }
-                });
             });
         } else {
             // We're finished

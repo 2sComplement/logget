@@ -80,6 +80,15 @@ curl "localhost:3100/logs/log1.log?search=debug&last=5"
 curl "localhost:3100/logs/log1.log?last=5"
 ```
 
+### Special Characters?
+
+No problem! Just send your request using [UrlEncoding](https://www.w3schools.com/tags/ref_urlencode.ASP)!
+
+For example, to return logs for `/var/log/a file.log`:
+```
+curl "localhost:3100/logs/a%20file.log
+```
+
 ## Third Party JS Libraries
 * dotenv
 * express

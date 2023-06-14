@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
+import { Dir, DirectoryContents } from "../models/DirectoryContents";
+import FilteredStream from "../streams/FilteredStream";
+import TailStream from "../streams/TailStream";
+import ReverseReadStream from "../streams/ReverseReadStream";
 import fs from "fs";
 import path from "path";
-import { Dir, DirectoryContents } from "../models/DirectoryContents";
-import { FilteredStream } from "../dal/FilteredStream";
-import { TailStream } from "../dal/TailStream";
 
 export const getLogFiles = (req: Request, res: Response, dir: string) => {
     if (!fs.existsSync(dir)) {
@@ -41,15 +42,10 @@ export const getLogFiles = (req: Request, res: Response, dir: string) => {
     }
 };
 
-export const getLogFile = (
-    req: Request,
-    res: Response,
-    root: string,
-    fileName: string
-) => {
+export const getLogFile = (req: Request, res: Response, root: string, fileName: string) => {
     const fullPath = path.join(root, fileName);
 
-    // TODO consider returning the same error for both these cases for obscurity
+    // Consider returning the same error for both these cases for obscurity
     if (!fs.existsSync(fullPath)) {
         res.statusCode = 400;
         res.send(`File does not exist: '${fullPath}`);
@@ -62,23 +58,21 @@ export const getLogFile = (
             const search = req.query.search as string;
             const last = req.query.last as string;
             const intLast = parseInt(last);
-            if (last && !intLast) {
+            if (last && (!intLast || intLast <= 0)) {
                 res.statusCode = 400;
-                res.send(`Query param 'last' must be a number`);
+                res.send(`Query param 'last' must be a number greater than 0`);
                 return;
             }
 
             res.writeHead(200, {
                 "Content-Type": "application/octet-stream",
-                // "Content-Disposition": `attachment; ${fileName}`,
-                // "Content-Length": stats.size,
             });
 
-            const readStream = fs.createReadStream(fullPath);
+            // const readStream = fs.createReadStream(fullPath);
 
             if (search) {
-                const filter = (chunk: string) =>
-                    chunk.toString().search(search) >= 0;
+                const readStream = new ReverseReadStream(fullPath);
+                const filter = (chunk: string) => chunk.toString().search(search) >= 0;
                 const filteredStream = new FilteredStream(filter);
 
                 if (intLast) {
@@ -88,22 +82,19 @@ export const getLogFile = (
                     readStream.pipe(filteredStream).pipe(res);
                 }
             } else if (intLast) {
+                const readStream = new ReverseReadStream(fullPath, intLast);
                 // Not technically a requirement but it might be useful to return the last n lines of the log file
                 const tailStream = new TailStream(intLast);
                 readStream.pipe(tailStream).pipe(res);
             } else {
+                const readStream = new ReverseReadStream(fullPath);
                 readStream.pipe(res);
             }
         }
     }
 };
 
-export const getFromPath = (
-    req: Request,
-    res: Response,
-    root: string,
-    logPath: string
-) => {
+export const getFromPath = (req: Request, res: Response, root: string, logPath: string) => {
     const fullPath = path.join(root, logPath);
     if (!fs.existsSync(fullPath)) {
         res.statusCode = 400;

@@ -1,8 +1,7 @@
 import { Transform, TransformCallback } from "stream";
+import { newline } from "../utils";
 
-const newline = process.platform === "win32" ? "\r\n" : "\n";
-
-export class FilteredStream extends Transform {
+export default class FilteredStream extends Transform {
     private filter: (chunk: string) => boolean;
 
     constructor(filter: (chunk: string) => boolean) {

@@ -32,3 +32,5 @@ app.get("/logs/:path(*)", (req: Request, res: Response) => {
 app.listen(port, () => {
     console.log(`Logget listening on port ${port} serving files from ${root}`);
 });
+
+app.use(express.static("src/public"));

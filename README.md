@@ -2,47 +2,54 @@
 
 Gets all the logs.
 
+## Assumptions
+
+* Created for use on any platform, but assumes log files will have unix line endings.
+* Used node 16.15.1, but didn't enforce this in `package.json`.
+
 ## Execution
 
 Do these things to run the app.
 
 ### Install dependencies
-```
+```sh
 yarn
 ```
 
 ### Build
 
-```
+```sh
 yarn build
 ```
 
 ### Run
-```
+```sh
 yarn start
 ```
 
 ### Run dev environment with watch
-```
+```sh
 yarn dev
 ```
 
 ### Run the tests
-```
+```sh
 yarn test
 ```
 
 ### Run docker environment
-To run the code in docker, first build the docker image:
-```
+To run the code in docker, first build the docker image (`sudo` may be required):
+```sh
+# Builds and tags v0.1 of the logget image.
 docker build -t logget:0.1 .
 ```
 Then run a container using this image:
-```
+```sh
+# Bind desired host port to 3100
 docker run -p 3101:3100 -d logget:0.1
 ```
-Then hit the app from the host machine on port `3101`:
-```
+Then hit the app from the host machine on the port exposed by the container (`3101` in the example above):
+```sh
 curl localhost:3101/logs
 ```
 
@@ -54,20 +61,22 @@ curl localhost:3101/logs
 
 ## API Usage
 
+The API was designed to be an intuitive file explorer. It allows clients to both list directory contents, and return file contents.
+
 ### List contents
 List the contents of the log root or nested folders:
 ```sh
-# Root log folder
+# Root log directory - /var/log on linux machines
 curl localhost:3100/logs
 
-# Nested folders
+# Nested directories under the root log directory
 curl localhost:3100/logs/dir1/dir2
 ```
 
 ### Get/filter logs
-Get a log file with optional filtering:
+Get a log file with optional filtering params:
 ```sh
-# Get the whole file
+# Get the whole file - /var/log/log1.log
 curl localhost:3100/logs/log1.log
 
 # Filter the response using the `search` query parameter
@@ -85,13 +94,17 @@ curl "localhost:3100/logs/log1.log?last=5"
 No problem! Just send your request using [UrlEncoding](https://www.w3schools.com/tags/ref_urlencode.ASP)!
 
 For example, to return logs for `/var/log/a file.log`:
-```
-curl "localhost:3100/logs/a%20file.log
+```sh
+curl "localhost:3100/logs/a%20file.log"
 ```
 
-## Third Party JS Libraries
+## Non-Dev Third Party Libraries
 * dotenv
 * express
+
+## Notable Dev Third Party Libraries
+* prettier - for formatting
+* mocha/chai - for unit testing/assertion
 
 ## Acceptance Criteria
 

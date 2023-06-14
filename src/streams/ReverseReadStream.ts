@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { newline } from "../utils";
+import { newline, reverseStringArrayReturnCharLength } from "../utils";
 import fs from "fs";
 
 export default class ReverseReadStream extends Readable {
@@ -27,41 +27,40 @@ export default class ReverseReadStream extends Readable {
                 if (err) {
                     this.emit("error", err);
                 } else {
-                    console.log(`fs.read(fd, buffer, 0, ${chunkSize}, ${pos - chunkSize})`)
                     fs.read(fd, buffer, 0, chunkSize, pos - chunkSize, (err, bytesRead) => {
                         if (err) {
                             this.emit("error", err);
                         } else {
                             if (this.position && bytesRead > 0) {
-
                                 // Split on newlines, and discard the first line in the chunk, since it may not be a full line.
                                 // Push these in reverse order
 
-                                const lines = buffer.toString().split(newline);
-                                if (lines.length === 1) {
-                                    this.push(lines[0]);
-                                    this.position -= lines[0].length;
-                                    this.position -= newline.length;
-                                    if (this.tail !== null) {
-                                        this.tail -= 1;
-                                    }
-                                } else {
+                                const lines = buffer
+                                    .toString()
+                                    .split(newline)
+                                    .filter((line) => line !== "");
 
-                                    //TODO make this more efficient
-                                    const revLines = [];
-                                    for (let i = lines.length - 1; i > 0; i--) {
-                                        revLines.push(lines[i]);
-                                        this.position -= lines[i].length;
-                                        this.position -= newline.length;
-                                        if (this.tail !== null) {
-                                            this.tail -= 1;
-                                        }
+                                const charLength = reverseStringArrayReturnCharLength(lines);
+                                const totalRead =
+                                    charLength +
+                                    newline.length * (lines.length === 1 ? 1 : Math.max(lines.length - 1, 0));
+
+                                if (totalRead === this.position) {
+                                    // The whole file has been read
+                                    this.position -= totalRead;
+                                } else if (lines.length > 0) {
+                                    // Throw away the first line since it may not be whole
+                                    const removed = lines.pop();
+                                    this.position -= totalRead - (removed ? removed.length : 0);
+
+                                    if (this.tail !== null) {
+                                        this.tail -= lines.length;
                                     }
-                                    this.push(revLines.join(newline));
                                 }
+                                this.push(lines.join(newline));
                             }
                         }
-                    
+
                         fs.close(fd, (err) => {
                             if (err) {
                                 this.emit("err", err);

@@ -7,6 +7,7 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT;
 
+// Mostly just for testing on windows
 const root = process.platform === "win32" ? "C:/temp" : "/var/log";
 
 app.get("/logs", (req: Request, res: Response) => {

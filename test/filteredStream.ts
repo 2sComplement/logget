@@ -6,7 +6,7 @@ import FilteredStream from "../src/streams/FilteredStream";
 
 describe("FilteredStream tests", () => {
     it("Filters based on text search", (done) => {
-        const rrs = fs.createReadStream("./test/test.txt");
+        const rrs = fs.createReadStream("./test/test.testlog");
         const filterOs = (chunk: string) => chunk.toString().search("o") >= 0;
         const filtered = new FilteredStream(filterOs);
         const chunks: string[] = [];

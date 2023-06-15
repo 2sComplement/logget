@@ -2,6 +2,9 @@ import { Readable } from "stream";
 import { newline, reverseStringArrayReturnCharLength } from "../utils";
 import fs from "fs";
 
+/**
+ * Stream that reverses a file, with an optional tail option that only streams the last N lines of the file.
+ */
 export default class ReverseReadStream extends Readable {
     private chunkSize = 1024 * 64;
     private tail: number | null = null;

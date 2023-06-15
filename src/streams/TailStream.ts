@@ -1,6 +1,9 @@
 import { Transform, TransformCallback } from "stream";
 import { newline } from "../utils";
 
+/**
+ * Stream that returns the last N number of entries, either from the top (ordered) or the bottom (reversed - default) of the stream.
+ */
 export default class TailStream extends Transform {
     private numResults: number;
     private results: string[];

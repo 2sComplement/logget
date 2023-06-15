@@ -1,6 +1,9 @@
 import { Transform, TransformCallback } from "stream";
 import { newline } from "../utils";
 
+/**
+ * Stream that filters chunks based on a lambda function.
+ */
 export default class FilteredStream extends Transform {
     private filter: (chunk: string) => boolean;
 

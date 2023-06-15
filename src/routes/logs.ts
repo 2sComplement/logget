@@ -6,6 +6,13 @@ import ReverseReadStream from "../streams/ReverseReadStream";
 import fs from "fs";
 import path from "path";
 
+/**
+ * Lists the contents of the specified path.
+ * 
+ * @param req - Express request
+ * @param res - Express response
+ * @param dir - Specified path to list
+ */
 export const getLogFiles = (req: Request, res: Response, dir: string) => {
     if (!fs.existsSync(dir)) {
         res.statusCode = 400;
@@ -42,8 +49,21 @@ export const getLogFiles = (req: Request, res: Response, dir: string) => {
     }
 };
 
-export const getLogFile = (req: Request, res: Response, root: string, fileName: string) => {
-    const fullPath = path.join(root, fileName);
+/**
+ * Streams the specified log file, starting from the bottom.
+ * 
+ * @param req - Express request, with optional query parameters:
+ * 
+ * `search` - filters the log file
+ * 
+ * `last` - returns the last N lines of the log file
+ * 
+ * @param res - Express response
+ * @param root - Log root
+ * @param logPath - Path to the file relative to `root`
+ */
+export const getLogFile = (req: Request, res: Response, root: string, logPath: string) => {
+    const fullPath = path.join(root, logPath);
 
     // Consider returning the same error for both these cases for obscurity
     if (!fs.existsSync(fullPath)) {
@@ -94,6 +114,13 @@ export const getLogFile = (req: Request, res: Response, root: string, fileName: 
     }
 };
 
+/**
+ * Returns directory contents if `logPath` is a directory, or streams file contents if it's a file. See `getLogFiles` and `getLogFile` for more information.
+ * @param req - Express request
+ * @param res - Express response
+ * @param root - Log root
+ * @param logPath - Path to the file relative to `root`
+ */
 export const getFromPath = (req: Request, res: Response, root: string, logPath: string) => {
     const fullPath = path.join(root, logPath);
     if (!fs.existsSync(fullPath)) {

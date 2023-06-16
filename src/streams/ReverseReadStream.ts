@@ -30,6 +30,7 @@ export default class ReverseReadStream extends Readable {
                 if (err) {
                     this.emit("error", err);
                 } else {
+                    // console.log(`read chunk - ${this.position}`)
                     fs.read(fd, buffer, 0, chunkSize, pos - chunkSize, (err, bytesRead) => {
                         if (err) {
                             this.emit("error", err);
@@ -43,18 +44,23 @@ export default class ReverseReadStream extends Readable {
                                     .split(newline)
                                     .filter((line) => line !== "");
 
-                                const charLength = reverseStringArrayReturnCharLength(lines);
-                                const totalRead =
-                                    charLength +
-                                    newline.length * (lines.length === 1 ? 1 : Math.max(lines.length - 1, 0));
+                                reverseStringArrayReturnCharLength(lines);
 
-                                if (totalRead === this.position) {
+                                if (bytesRead === this.position) {
                                     // The whole file has been read
-                                    this.position -= totalRead;
+                                    this.position -= bytesRead;
                                 } else if (lines.length > 0) {
                                     // Throw away the first line since it may not be whole
                                     const removed = lines.pop();
-                                    this.position -= totalRead - (removed ? removed.length : 0);
+
+                                    let totalRead = bytesRead;
+
+                                    if (removed) {
+                                        totalRead -= removed.length;
+                                        lines[lines.length - 1] += newline;
+                                    }
+
+                                    this.position -= totalRead;
 
                                     if (this.tail !== null) {
                                         this.tail -= lines.length;

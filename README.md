@@ -38,7 +38,7 @@ yarn test
 ```
 
 ### Run docker environment
-To run the code in docker, first build the docker image (`sudo` may be required):
+To run the app in a docker container, first build the docker image (`sudo` may be required):
 ```sh
 # Builds and tags v0.1 of the logget image.
 docker build -t logget:0.1 .

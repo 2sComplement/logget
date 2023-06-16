@@ -19,7 +19,7 @@ describe("ReverseReadStream tests", () => {
             assert.fail(err.message);
         });
     });
-    
+
     it("Reads a long file in reverse", (done) => {
         const rrs = new ReverseReadStream("./test/longTest.testlog");
         let numLines = 0;
@@ -28,7 +28,10 @@ describe("ReverseReadStream tests", () => {
         const expectedNumLines = 8766;
 
         rrs.on("data", (data) => {
-            const lines: string[] = data.toString().split(newline);
+            const lines: string[] = data
+                .toString()
+                .split(newline)
+                .filter((line: string) => line !== "");
             if (firstLine === "") {
                 firstLine = lines[0];
             }
@@ -45,7 +48,7 @@ describe("ReverseReadStream tests", () => {
             assert.fail(err.message);
         });
     });
-    
+
     it("Reads an empty file", (done) => {
         const rrs = new ReverseReadStream("./test/empty.testlog");
         rrs.on("data", (data) => {

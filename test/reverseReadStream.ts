@@ -61,4 +61,41 @@ describe("ReverseReadStream tests", () => {
             assert.fail(err.message);
         });
     });
+    
+    it("Reads a file with a long line", (done) => {
+        const rrs = new ReverseReadStream("./test/longLineTest.testlog");
+        let numLines = 0;
+        const expectedNumLines = 6;
+        rrs.on("data", (data) => {
+            const lines: string[] = data
+                .toString()
+                .split(newline)
+                .filter((line: string) => line !== "");
+            numLines += lines.length;
+        });
+        rrs.on("end", () => {
+            expect(numLines).to.equal(expectedNumLines);
+            done();
+        });
+        rrs.on("error", (err) => {
+            assert.fail(err.message);
+        });
+    });
+    
+    it("Reads a file with a single line", (done) => {
+        const rrs = new ReverseReadStream("./test/singleLineTest.testlog");
+        const chunks: string[] = [];
+        const expected = ["one"].join(newline);
+
+        rrs.on("data", (data) => {
+            chunks.push(data.toString());
+        });
+        rrs.on("end", () => {
+            expect(chunks.join(newline)).to.equal(expected);
+            done();
+        });
+        rrs.on("error", (err) => {
+            assert.fail(err.message);
+        });
+    });
 });

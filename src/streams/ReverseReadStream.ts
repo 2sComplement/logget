@@ -20,6 +20,23 @@ export default class ReverseReadStream extends Readable {
         }
     }
 
+    _readRestOfLine(fd: number, removed: string) {
+        let restOfLine = removed; // What we have in the line so far
+        let keepGoing = true;
+        while (this.position && keepGoing) {
+            const buffer = Buffer.alloc(1);
+            const bytesRead = fs.readSync(fd, buffer, 0, 1, this.position);
+            const bufferAsString = buffer.toString();
+            if (bytesRead === 0 || bufferAsString === newline) {
+                keepGoing = false;
+            } else {
+                restOfLine = bufferAsString + restOfLine;
+                this.position--;
+            }
+        }
+        return restOfLine;
+    }
+
     _readChunk() {
         const isTailValid = this.tail === null || (this.tail !== null && this.tail > 0);
         if (this.position !== null && this.position > 0 && isTailValid) {
@@ -53,17 +70,27 @@ export default class ReverseReadStream extends Readable {
                                     // Throw away the first line since it may not be whole
                                     const removed = lines.pop();
 
-                                    let totalRead = bytesRead;
+                                    if (removed && removed.length === bytesRead) {
+                                        this.position -= bytesRead;
+                                        this.position--;
 
-                                    if (removed) {
-                                        totalRead -= removed.length;
+                                        const wholeLine = this._readRestOfLine(fd, removed);
+
+                                        lines.unshift(wholeLine);
                                         lines[lines.length - 1] += newline;
-                                    }
+                                    } else {
+                                        let totalRead = bytesRead;
 
-                                    this.position -= totalRead;
+                                        if (removed) {
+                                            totalRead -= removed.length;
+                                            lines[lines.length - 1] += newline;
+                                        }
 
-                                    if (this.tail !== null) {
-                                        this.tail -= lines.length;
+                                        this.position -= totalRead;
+
+                                        if (this.tail !== null) {
+                                            this.tail -= lines.length;
+                                        }
                                     }
                                 }
                                 this.push(lines.join(newline));

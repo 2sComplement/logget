@@ -1,17 +1,35 @@
 <html>
-    <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/regular.min.css" />
-    </head>
-
     <style>
+        body {
+            background-color: #0f0f0f;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #b5dbee;
+        }
+        a {
+            color: #cdbb84;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #a2946b;
+        }
+        textarea {
+            background-color: #202020;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #b5dbee;
+        }
         .container {
             display: flex;
             flex-direction: row;
+            padding: 20px;
         }
         .file-explorer {
             border: 1px solid grey;
             min-width: 200px;
             padding: 10px;
+            flex: 20;
+        }
+        .file-contents {
+            flex: 80;
         }
         .btn {
             background-color: #dadada;
@@ -20,142 +38,47 @@
             cursor: pointer;
             margin: 2px 0px 2px 0px;
         }
+        #fileContentsText {
+            min-width: 500px;
+            min-height: 700px;
+        }
     </style>
 
-    <script>
-        let dirStack = [];
+    <script src="script.js" type="text/javascript"></script>
 
-        function getFileContents(path) {
-            if (!path || path === "") return;
-
-            const xhttp = new XMLHttpRequest();
-            const encoded = encodeURI(path);
-            xhttp.open("GET", `http://localhost:3100/logs/${encoded}`, true);
-            xhttp.send();
-            xhttp.onload = function () {
-                let resp = JSON.parse(xhttp.responseText);
-
-                document.getElementById("explorer").innerHTML = "";
-                for (let i = 0; i < resp.dirs.length; i++) {
-                    let dirNode = document.createElement("a");
-                    dirNode.href = "#";
-                    dirNode.onclick = listDirectory(resp.dirs[i].name);
-                    dirNode.appendChild(document.createTextNode(resp.dirs[i].name));
-
-                    // dirNode.appendChild(document.createElement("a"))
-                    // dirNode.appendChild(document.createTextNode(`<a href="#" onclick="listDirectory(${''})">(dir)</a> ${resp.dirs[i].name}`));
-                    document.getElementById("explorer").appendChild(dirNode);
-                }
-                for (let i = 0; i < resp.files.length; i++) {
-                    let fileNode = document.createElement("div");
-                    fileNode.appendChild(
-                        document.createTextNode(`(file) ${resp.files[i].name} (${resp.files[i].size})`)
-                    );
-                    document.getElementById("explorer").appendChild(fileNode);
-                }
-            };
-        }
-
-        function createLink(name, onclick) {
-            let a = document.createElement("a");
-            a.href = "#";
-            a.onclick = onclick;
-            a.appendChild(document.createTextNode(name));
-            return a;
-        }
-
-        function wrapInDiv(element) {
-            let div = document.createElement("div");
-            div.appendChild(element);
-            return div;
-        }
-
-        function listDirectory(subdir) {
-            const xhttp = new XMLHttpRequest();
-
-            if (subdir === "root") {
-                dirStack = [];
-            } else {
-                dirStack = subdir.split("/");
-            }
-
-            // Reset the error
-            document.getElementById("error").innerHTML = "";
-
-
-            document.getElementById("dirStack").innerHTML = dirStack.join("/");
-
-            // Make the request
-
-            const encoded = subdir === "root" ? "" : encodeURI(dirStack.join("/"));
-            xhttp.open("GET", `http://localhost:3100/logs/${encoded}`, true);
-            xhttp.onerror = function (err) {
-                console.log("ERROR");
-                alert("Error: " + err);
-            };
-            xhttp.onload = function () {
-                console.log(xhttp.status);
-                if (xhttp.status === 200) {
-                    let resp = JSON.parse(xhttp.responseText);
-
-                    let current = dirStack.length === 0 ? "root" : dirStack.join("/");
-
-                    document.getElementById("explorer").innerHTML = "";
-
-                    document.getElementById("explorer").appendChild(document.createTextNode(`Listing: ${current}`));
-
-                    if (dirStack.length > 0) {
-                        let upOne = dirStack.length == 1 ? "root" : dirStack.slice(0, dirStack.length - 1).join("/");
-                        let onclick = function() {
-                            listDirectory(upOne);
-                        }
-
-                        document.getElementById("explorer").appendChild(wrapInDiv(createLink(`.. (${upOne})`, onclick)));
-                    }
-
-                    for (let i = 0; i < resp.dirs.length; i++) {
-
-                        // let dirNode = document.createElement("a");
-                        // dirNode.href = "#";
-                        // dirNode.onclick="listDirectory(resp.dirs[i].name)";
-                        let onclick = function () {
-                            listDirectory(`${dirStack.join("/")}/${resp.dirs[i].name}`);
-                        };
-                        document.getElementById("explorer").appendChild(wrapInDiv(createLink(`(dir) ${resp.dirs[i].name}`, onclick)));
-
-                        // dirNode.appendChild(document.createElement("a"))
-                        // dirNode.appendChild(document.createTextNode(`<a href="#" onclick="listDirectory(${''})">(dir)</a> ${resp.dirs[i].name}`));
-                        // document.getElementById("explorer").appendChild(dirNodeDiv);
-                    }
-                    for (let i = 0; i < resp.files.length; i++) {
-                        let fileNode = document.createElement("div");
-                        fileNode.appendChild(
-                            document.createTextNode(`(file) ${resp.files[i].name} (${resp.files[i].size})`)
-                        );
-                        document.getElementById("explorer").appendChild(fileNode);
-                    }
-                } else {
-                    document.getElementById("error").innerHTML = xhttp.responseText;
-                }
-            };
-            xhttp.send();
-        }
-    </script>
-
-    <body>
+    <body onload="listDirectory('');">
         <h1>The best UI to showcase Logget</h1>
         <h6>brought to you by web design circa 1998!</h6>
 
         <div id="error"></div>
-        <div id="dirStack"></div>
-        <button class="btn" onclick="listDirectory('root')">Root</button>
         <div class="container">
             <div class="file-explorer">
-                <div>File explorer</div>
+                <div>
+                    <div>File explorer</div>
+                    <div id="currentPath"></div>
+                </div>
                 <hr />
                 <div id="explorer"></div>
             </div>
-            <div>test2</div>
+            <div class="file-contents">
+                <div>
+                    <div></div>
+                    <textarea
+                        id="fileContentsText"
+                        style="width: 100%"
+                        wrap="off"
+                        spellcheck="false"
+                        readonly
+                    ></textarea>
+                    <div style="display:flex; flex-direction: row">
+                        <div id="fileName" style="flex:100"></div>
+                        <div id="pagination"></div>
+                    </div>
+                    <div style="text-align: center">
+                        <a href="#" onclick="clearFileContentsText();">clear</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </body>
 </html>

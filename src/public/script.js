@@ -57,21 +57,65 @@ function updateFileExplorer(path, dirContents) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function clearFileContentsText() {
     document.getElementById("fileContentsText").textContent = "";
+    document.getElementById("prevPage").textContent = "";
+    document.getElementById("nextPage").textContent = "";
+    document.getElementById("currPage").innerHTML = "";
+    document.getElementById("fileName").innerHTML = "";
 }
 
 function updatePagination(page) {
-    // Clear file contents and page info
+    
+    // Clear page links
+    document.getElementById("prevPage").textContent = "";
+    document.getElementById("nextPage").textContent = "";
+
+    // No pagination required
     if (page == null || page == undefined) {
-        document.getElementById("pagination").innerHTML = "Page 1/1";
+        document.getElementById("currPage").innerHTML = "Page 1/1";
         return;
     }
 
     const start = state.pageSize * page;
     const pages = Math.ceil(state.fileContents.length / state.pageSize);
-    document.getElementById("pagination").innerHTML = `Page ${page + 1}/${pages}`;
 
-    document.getElementById("fileContentsText").textContent = "";
+    if (page > 0) {
+        let onclick = function () {
+            updatePagination(page - 1)
+        }
+        let prev = createLink(`Page ${page}`, onclick)
+        document.getElementById("prevPage").appendChild(prev);
+    }
+
+    if (page < pages - 1) {
+        let onclick = function () {
+            updatePagination(page + 1)
+        }
+        let next = createLink(`Page ${page + 2}`, onclick)
+        document.getElementById("nextPage").appendChild(next);
+    }
+
+    document.getElementById("currPage").innerHTML = `Page ${page + 1}/${pages}`;
     document.getElementById("fileContentsText").textContent = state.fileContents.slice(start, start + state.pageSize).join('\n');
+}
+
+function getQueryParams() {
+    let queryParams = [];
+
+    const search = document.getElementById("search").value;
+    const last = document.getElementById("last").value;
+
+    if (search !== "") {
+        queryParams.push(`search=${search}`);
+    }
+    if (last !== "") {
+        queryParams.push(`last=${last}`);
+    }
+
+    if (queryParams.length > 0) {
+        return `?${queryParams.join("&")}`
+    } else {
+        return "";
+    }
 }
 
 function getFileContents(path) {
@@ -83,7 +127,10 @@ function getFileContents(path) {
 
     const xhttp = new XMLHttpRequest();
     const encoded = encodeURI(path);
-    xhttp.open("GET", `http://localhost:3100/logs/${encoded}`, true);
+
+    let queryParams = getQueryParams();
+
+    xhttp.open("GET", `http://localhost:3100/logs/${encoded}${queryParams}`, true);
     xhttp.send();
     xhttp.onload = function () {
         let resp = xhttp.responseText;
